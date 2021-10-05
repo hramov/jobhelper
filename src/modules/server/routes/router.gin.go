@@ -2,15 +2,16 @@ package routes
 
 import (
 	gin "github.com/gin-gonic/gin"
+	"github.com/hramov/jobhelper/src/modules/server/controller"
 )
 
 func Register(router *gin.Engine) {
 
-	// orderController := controller.OrderController{}
-	// userController := controller.UserController{}
-	// feedbackController := controller.FeedbackController{}
-	// telegramController := controller.TelegramController{}
-	// renderController := controller.RenderController{}
+	deviceController := controller.DeviceController{}
+	device := router.Group("/device")
+	{
+		device.GET("/", deviceController.FindAll)
+	}
 
 	// auth := router.Group("/auth")
 	// {
