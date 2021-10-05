@@ -10,13 +10,18 @@ import (
 	"github.com/hramov/jobhelper/src/modules/telegram/handler"
 )
 
-type Bot struct {
+type TGBot struct {
 	Instance *tgbotapi.BotAPI
 	Update   tgbotapi.UpdateConfig
 	Token    string
 }
 
-func (b *Bot) Create() *Bot {
+type MessageHistory map[int64]*tgbotapi.Message
+
+type Message = *tgbotapi.Message
+type Bot = *tgbotapi.BotAPI
+
+func (b *TGBot) Create() *TGBot {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TOKEN"))
 	if err != nil {
 		log.Println("Error " + err.Error())
@@ -28,7 +33,10 @@ func (b *Bot) Create() *Bot {
 	return b
 }
 
-func (b *Bot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
+func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
+
+	messageHistory := make(MessageHistory)
+
 	updates, err := b.Instance.GetUpdatesChan(updateConfig)
 	if err != nil {
 		log.Println(err.Error())
@@ -44,9 +52,19 @@ func (b *Bot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 			continue
 		}
 		if reflect.TypeOf(update.Message.Text).Kind() == reflect.String && update.Message.Text != "" {
-			if strings.HasPrefix(update.Message.Text, "/") {
-				handler.MainSwitch(update.Message, b.Instance)
+			messageHistory[update.Message.Chat.ID] = update.Message
+
+			if update.Message.IsCommand() {
+				switch update.Message.Command() {
+				case "create":
+					handler.CreateMessage(update.Message, b.Instance)
+				}
 			}
+
+			if strings.Contains(update.Message.Text, ";") {
+				handler.Create(update.Message, b.Instance)
+			}
+
 		} else {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Use words for search or command with /.")
 			b.Instance.Send(msg)

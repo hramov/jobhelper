@@ -4,7 +4,7 @@ type DeviceEntity struct {
 	Provider DeviceProviderPort
 }
 
-func (d *DeviceEntity) CreateDevice(device *DeviceDto) (*DeviceDto, error) {
+func (d *DeviceEntity) CreateNewDevice(device *DeviceDto) (*DeviceDto, error) {
 	return d.Provider.Create(device)
 }
 

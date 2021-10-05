@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("Cannot use IoC container!")
 	}
 
-	bot := telegram.Bot{Token: os.Getenv("TOKEN")}
+	bot := telegram.TGBot{Token: os.Getenv("TOKEN")}
 	bot.Create()
 	go bot.HandleQuery(bot.Update)
 
