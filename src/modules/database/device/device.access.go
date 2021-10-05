@@ -1,6 +1,9 @@
 package device_db
 
 import (
+	"fmt"
+	"time"
+
 	device_core "github.com/hramov/jobhelper/src/core/device"
 	"gorm.io/gorm"
 )
@@ -20,4 +23,43 @@ func (da *DeviceAccess) FindAll() ([]*device_core.DeviceDto, error) {
 		devices = append(devices, dm.ModelToDto())
 	}
 	return devices, nil
+}
+
+func (da *DeviceAccess) FindByID(id uint) (*device_core.DeviceDto, error) {
+	da.Device = nil
+	da.DB.Find(&da.Device, "id=?", id)
+	dm := DeviceMapper{Model: *da.Device}
+	return dm.ModelToDto(), nil
+}
+
+func (da *DeviceAccess) FindByStation(station string) (*device_core.DeviceDto, error) {
+	da.Device = nil
+	da.DB.Find(&da.Device, "station=?", station)
+	dm := DeviceMapper{Model: *da.Device}
+	return dm.ModelToDto(), nil
+}
+
+func (da *DeviceAccess) FindByDueDate(days int) (*device_core.DeviceDto, error) {
+	da.Device = nil
+	da.DB.Find(&da.Device, "next_check<", time.Now().AddDate(0, 0, days))
+	dm := DeviceMapper{Model: *da.Device}
+	return dm.ModelToDto(), nil
+}
+
+func (da *DeviceAccess) FindByStringCondition(field string, value string) (*device_core.DeviceDto, error) {
+	da.Device = nil
+	da.DB.Find(&da.Device, fmt.Sprintf("%s=?", field), value)
+	dm := DeviceMapper{Model: *da.Device}
+	return dm.ModelToDto(), nil
+}
+
+func (da *DeviceAccess) Create(device *device_core.DeviceDto) (*device_core.DeviceDto, error) {
+	dm := DeviceMapper{Dto: *device}
+	deviceModel := dm.DtoToModel()
+	da.DB.Create(&deviceModel)
+	result, err := da.FindByID(deviceModel.ID)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot create order")
+	}
+	return result, nil
 }
