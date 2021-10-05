@@ -25,7 +25,7 @@ func main() {
 
 	bot := telegram.Bot{Token: os.Getenv("TOKEN")}
 	bot.Create()
-	bot.HandleQuery(bot.Update)
+	go bot.HandleQuery(bot.Update)
 
 	app := server.Gin{}
 	app.Start()

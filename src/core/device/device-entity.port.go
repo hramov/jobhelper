@@ -2,6 +2,8 @@ package device_core
 
 type DeviceEntityPort interface {
 	ShowAllDevices() ([]*DeviceDto, error)
+	ShowDeviceByID(id uint) (*DeviceDto, error)
+	ShowExpiresDevices(days int) ([]*DeviceDto, error)
 	// Create(devicekDto *DeviceDto) (*DeviceDto, error)
 	// Update(deviceID uint16, devicekDto *DeviceDto) (*DeviceDto, error)
 	// Delete(deviceID uint16) (*DeviceDto, error)

@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"github.com/hramov/jobhelper/src/modules/telegram/handler"
@@ -43,9 +44,11 @@ func (b *Bot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 			continue
 		}
 		if reflect.TypeOf(update.Message.Text).Kind() == reflect.String && update.Message.Text != "" {
-			handler.MainSwitch(update.Message, b.Instance)
+			if strings.HasPrefix(update.Message.Text, "/") {
+				handler.MainSwitch(update.Message, b.Instance)
+			}
 		} else {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Use the words for search.")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Use words for search or command with /.")
 			b.Instance.Send(msg)
 		}
 	}

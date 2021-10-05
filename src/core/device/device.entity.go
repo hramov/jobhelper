@@ -16,6 +16,6 @@ func (d *DeviceEntity) ShowDeviceByID(id uint) (*DeviceDto, error) {
 	return d.Provider.FindByID(id)
 }
 
-func (d *DeviceEntity) ShowExpiresDevices(days int) (*DeviceDto, error) {
+func (d *DeviceEntity) ShowExpiresDevices(days int) ([]*DeviceDto, error) {
 	return d.Provider.FindByDueDate(days)
 }

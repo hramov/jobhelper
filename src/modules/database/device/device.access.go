@@ -39,11 +39,15 @@ func (da *DeviceAccess) FindByStation(station string) (*device_core.DeviceDto, e
 	return dm.ModelToDto(), nil
 }
 
-func (da *DeviceAccess) FindByDueDate(days int) (*device_core.DeviceDto, error) {
+func (da *DeviceAccess) FindByDueDate(days int) ([]*device_core.DeviceDto, error) {
 	da.Device = nil
+	var devices []*device_core.DeviceDto
 	da.DB.Find(&da.Device, "next_check<", time.Now().AddDate(0, 0, days))
-	dm := DeviceMapper{Model: *da.Device}
-	return dm.ModelToDto(), nil
+	for i := 0; i < len(da.Devices); i++ {
+		dm := DeviceMapper{Model: *da.Devices[i]}
+		devices = append(devices, dm.ModelToDto())
+	}
+	return devices, nil
 }
 
 func (da *DeviceAccess) FindByStringCondition(field string, value string) (*device_core.DeviceDto, error) {

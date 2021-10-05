@@ -15,5 +15,8 @@ func MainSwitch(message Message, bot Bot) {
 	case "/check":
 		Check(message, bot)
 		break
+	case "/all":
+		GetAll(message, bot)
+		break
 	}
 }
