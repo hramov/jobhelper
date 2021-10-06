@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-var (
-	globalFileName = "/srv/jobhelper/logs.txt"
-)
-
 func Log(sender, message string) {
 	display(sender, message)
 	writeFile(sender, message)
@@ -23,9 +19,9 @@ func display(sender, message string) {
 
 func writeFile(sender, message string) {
 	// localFile, err := os.OpenFile(localFileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0777)
-	globalFile, err := os.OpenFile(globalFileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0777)
+	globalFile, err := os.OpenFile(os.Getenv("LOGS"), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0777)
 	if err != nil {
-		Log("Logger", fmt.Sprintf("Unable to create file: %s", err.Error()))
+		Log("Logger", fmt.Sprintf("Unable to create file: %s - %s", os.Getenv("LOGS"), err.Error()))
 	}
 	// defer localFile.Close()
 	defer globalFile.Close()
