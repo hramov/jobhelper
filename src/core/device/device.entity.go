@@ -19,3 +19,11 @@ func (d *DeviceEntity) ShowDeviceByID(id uint) (*DeviceDto, error) {
 func (d *DeviceEntity) ShowExpiresDevices(days int) ([]*DeviceDto, error) {
 	return d.Provider.FindByDueDate(days)
 }
+
+func (d *DeviceEntity) ShowDeviceByStation(station string) ([]*DeviceDto, error) {
+	return d.Provider.FindByStation(station)
+}
+
+func (d *DeviceEntity) ShowDeviceByField(field, value string) ([]*DeviceDto, error) {
+	return d.Provider.FindByStringCondition(field, value)
+}

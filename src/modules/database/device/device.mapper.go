@@ -12,6 +12,7 @@ type DeviceMapper struct {
 func (dm *DeviceMapper) DtoToModel() *Device {
 	device := dm.Model
 	device.ID = dm.Dto.ID
+	device.Type = dm.Dto.Type
 	device.Title = dm.Dto.Title
 	device.Description = dm.Dto.Description
 	device.InvNumber = dm.Dto.InvNumber
@@ -26,6 +27,7 @@ func (dm *DeviceMapper) DtoToModel() *Device {
 func (dm *DeviceMapper) ModelToDto() *device_core.DeviceDto {
 	device := dm.Dto
 	device.ID = dm.Model.ID
+	device.Type = dm.Model.Type
 	device.Title = dm.Model.Title
 	device.Description = dm.Model.Description
 	device.InvNumber = dm.Model.InvNumber

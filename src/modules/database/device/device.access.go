@@ -32,17 +32,10 @@ func (da *DeviceAccess) FindByID(id uint) (*device_core.DeviceDto, error) {
 	return dm.ModelToDto(), nil
 }
 
-func (da *DeviceAccess) FindByStation(station string) (*device_core.DeviceDto, error) {
-	da.Device = nil
-	da.DB.Find(&da.Device, "station=?", station)
-	dm := DeviceMapper{Model: *da.Device}
-	return dm.ModelToDto(), nil
-}
-
-func (da *DeviceAccess) FindByDueDate(days int) ([]*device_core.DeviceDto, error) {
+func (da *DeviceAccess) FindByStation(station string) ([]*device_core.DeviceDto, error) {
 	da.Device = nil
 	var devices []*device_core.DeviceDto
-	da.DB.Find(&da.Device, "next_check<", time.Now().AddDate(0, 0, days))
+	da.DB.Find(&da.Devices, "station=?", station)
 	for i := 0; i < len(da.Devices); i++ {
 		dm := DeviceMapper{Model: *da.Devices[i]}
 		devices = append(devices, dm.ModelToDto())
@@ -50,11 +43,26 @@ func (da *DeviceAccess) FindByDueDate(days int) ([]*device_core.DeviceDto, error
 	return devices, nil
 }
 
-func (da *DeviceAccess) FindByStringCondition(field string, value string) (*device_core.DeviceDto, error) {
+func (da *DeviceAccess) FindByDueDate(days int) ([]*device_core.DeviceDto, error) {
 	da.Device = nil
-	da.DB.Find(&da.Device, fmt.Sprintf("%s=?", field), value)
-	dm := DeviceMapper{Model: *da.Device}
-	return dm.ModelToDto(), nil
+	var devices []*device_core.DeviceDto
+	da.DB.Find(&da.Devices, "next_check < ?", time.Now().AddDate(0, 0, days))
+	for i := 0; i < len(da.Devices); i++ {
+		dm := DeviceMapper{Model: *da.Devices[i]}
+		devices = append(devices, dm.ModelToDto())
+	}
+	return devices, nil
+}
+
+func (da *DeviceAccess) FindByStringCondition(field, value string) ([]*device_core.DeviceDto, error) {
+	da.Device = nil
+	var devices []*device_core.DeviceDto
+	da.DB.Find(&da.Devices, fmt.Sprintf("%s=?", field), value)
+	for i := 0; i < len(da.Devices); i++ {
+		dm := DeviceMapper{Model: *da.Devices[i]}
+		devices = append(devices, dm.ModelToDto())
+	}
+	return devices, nil
 }
 
 func (da *DeviceAccess) Create(device *device_core.DeviceDto) (*device_core.DeviceDto, error) {
