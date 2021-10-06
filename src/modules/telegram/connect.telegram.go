@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -10,11 +9,9 @@ import (
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	device_core "github.com/hramov/jobhelper/src/core/device"
-	user_core "github.com/hramov/jobhelper/src/core/user"
 	"github.com/hramov/jobhelper/src/modules/logger"
 	device_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/device"
 	user_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/user"
-	"github.com/hramov/jobhelper/src/modules/telegram/worker"
 )
 
 type TGBot struct {
@@ -31,15 +28,16 @@ type Bot = *tgbotapi.BotAPI
 func (b *TGBot) Create() *TGBot {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TOKEN"))
 	if err != nil {
-		log.Println("Error " + err.Error())
+		logger.Log("TGBot:Create", err.Error())
 	}
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	b.Instance = bot
 	b.Update = u
 
-	worker := worker.NotificationWorker{TimePeriod: 4}
-	go worker.CheckDevices(b.Instance)
+	// TODO (too much CPU usage!)
+	// worker := worker.NotificationWorker{TimePeriod: 4}
+	// go worker.CheckDevices(b.Instance)
 
 	return b
 }
@@ -50,14 +48,14 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 
 	updates, err := b.Instance.GetUpdatesChan(updateConfig)
 	if err != nil {
-		log.Println(err.Error())
+		logger.Log("TGBot:HandleQuery", err.Error())
 	}
 
-	log.Println("Ready to accept queries!")
+	logger.Log("TGBot:HandleQuery", "Ready to accept queries!")
 
 	for update := range updates {
 
-		log.Printf("New query: %s, MessageID: %d", update.Message.Text, update.Message.MessageID)
+		logger.Log("TGBot:HandleQuery", fmt.Sprintf("New query: %s, MessageID: %d", update.Message.Text, update.Message.MessageID))
 
 		if update.Message == nil {
 			continue
@@ -70,7 +68,7 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 				data := update.Message.CommandArguments()
 
 				var deviceReply []*device_core.DeviceDto
-				var userReply []*user_core.UserDto
+				// var userReply []*user_core.UserDto
 
 				var err error
 
@@ -91,14 +89,13 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 					b.Instance.Send(msg)
 					break
 				case "register":
-					userReply, err = user_handler.Register(data)
+					_, err = user_handler.Register(data)
 					if err != nil {
-						log.Println(err)
+						logger.Log("TGBot:Handler:Register", err.Error())
 						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка при создании пользователя")
 						b.Instance.Send(msg)
 						break
 					}
-					log.Println(userReply)
 					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пользователь успешно зарегистрирован")
 					b.Instance.Send(msg)
 					break

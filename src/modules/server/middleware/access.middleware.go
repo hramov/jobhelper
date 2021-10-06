@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -49,7 +48,6 @@ func (am *AccessMiddleware) Check(c *gin.Context) {
 	}
 
 	for _, value := range am.Roles {
-		fmt.Println(value)
 		if claims["role"] == value {
 			c.Next()
 			return

@@ -2,7 +2,6 @@ package device_handler
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -48,7 +47,6 @@ func Create(data string) ([]*device_core.DeviceDto, error) {
 }
 
 func timePrepare(rawTime string) (time.Time, error) {
-	log.Println(rawTime)
 	tArr := strings.Split(rawTime, ".")
 	return time.Parse(time.RFC3339, fmt.Sprintf("%s-%s-%sT00:00:00Z", tArr[2], tArr[1], tArr[0]))
 }

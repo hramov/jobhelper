@@ -2,7 +2,6 @@ package worker
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/golobby/container/v3"
 	device_core "github.com/hramov/jobhelper/src/core/device"
 	user_core "github.com/hramov/jobhelper/src/core/user"
+	"github.com/hramov/jobhelper/src/modules/logger"
 )
 
 type NotificationWorker struct {
@@ -29,13 +29,13 @@ func (nw *NotificationWorker) CheckDevices(bot *tgbotapi.BotAPI) {
 	for {
 		if time.Since(now) > 24*time.Hour {
 
-			log.Println("Notification Worker")
+			logger.Log("Notification Worker", "Started!")
 
 			reply, err := deviceEntity.ShowExpiresDevices(nw.TimePeriod)
 
 			heads, err := userEntity.ShowWhomToSend()
 			if err != nil {
-				log.Println(err.Error())
+				logger.Log("Notification Worker", err.Error())
 			}
 
 			for _, user := range heads {

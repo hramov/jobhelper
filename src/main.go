@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/hramov/jobhelper/src/modules/database"
+	"github.com/hramov/jobhelper/src/modules/files"
 	"github.com/hramov/jobhelper/src/modules/ioc"
 	"github.com/hramov/jobhelper/src/modules/server"
 	"github.com/hramov/jobhelper/src/modules/telegram"
@@ -14,6 +15,9 @@ import (
 func main() {
 
 	godotenv.Load()
+
+	files.CheckFile("data/logs.txt")
+	files.CheckFile("srv/jobhelper/logs.txt")
 
 	orm := &database.Gorm{}
 	orm.Connect()
