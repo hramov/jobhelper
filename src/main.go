@@ -16,8 +16,8 @@ func main() {
 
 	godotenv.Load()
 
-	files.CheckFile("data/logs.txt")
-	files.CheckFile("srv/jobhelper/logs.txt")
+	// files.CheckFile("data/logs.txt")
+	files.CheckFile("/srv/jobhelper/logs.txt")
 
 	orm := &database.Gorm{}
 	orm.Connect()
