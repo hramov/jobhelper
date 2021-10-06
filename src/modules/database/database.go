@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	device_db "github.com/hramov/jobhelper/src/modules/database/device"
+	user_db "github.com/hramov/jobhelper/src/modules/database/user"
 )
 
 type Gorm struct {
@@ -29,5 +30,6 @@ func (g *Gorm) GetConnection() *gorm.DB {
 
 func (g *Gorm) Migrate() error {
 	err := g.db.AutoMigrate(&device_db.Device{})
+	err = g.db.AutoMigrate(&user_db.User{})
 	return err
 }

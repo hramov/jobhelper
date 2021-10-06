@@ -10,8 +10,10 @@ import (
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	device_core "github.com/hramov/jobhelper/src/core/device"
+	user_core "github.com/hramov/jobhelper/src/core/user"
 	"github.com/hramov/jobhelper/src/modules/logger"
 	device_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/device"
+	user_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/user"
 	"github.com/hramov/jobhelper/src/modules/telegram/worker"
 )
 
@@ -37,7 +39,7 @@ func (b *TGBot) Create() *TGBot {
 	b.Update = u
 
 	worker := worker.NotificationWorker{TimePeriod: 4}
-	go worker.CheckDevices(174055421, b.Instance)
+	go worker.CheckDevices(b.Instance)
 
 	return b
 }
@@ -67,7 +69,9 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 				command := update.Message.Command()
 				data := update.Message.CommandArguments()
 
-				var reply []*device_core.DeviceDto
+				var deviceReply []*device_core.DeviceDto
+				var userReply []*user_core.UserDto
+
 				var err error
 
 				switch command {
@@ -80,23 +84,39 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 					b.Instance.Send(msg)
 					break
 				case "create":
-					reply, err = device_handler.Create(data)
+					deviceReply, err = device_handler.Create(data)
+					break
+				case "myid":
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%d", update.Message.Chat.ID))
+					b.Instance.Send(msg)
+					break
+				case "register":
+					userReply, err = user_handler.Register(data)
+					if err != nil {
+						log.Println(err)
+						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка при создании пользователя")
+						b.Instance.Send(msg)
+						break
+					}
+					log.Println(userReply)
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пользователь успешно зарегистрирован")
+					b.Instance.Send(msg)
 					break
 				case "all":
-					reply, err = device_handler.GetAll()
+					deviceReply, err = device_handler.GetAll()
 					break
 				case "check":
 					days, err := strconv.Atoi(data)
 					if err != nil {
 						break
 					}
-					reply, err = device_handler.Check(days)
-					if len(reply) == 0 {
+					deviceReply, err = device_handler.Check(days)
+					if len(deviceReply) == 0 {
 						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Просроченного оборудования нет!")
 						b.Instance.Send(msg)
 					}
 				default:
-					reply, err = device_handler.GetByField(command, data)
+					deviceReply, err = device_handler.GetByField(command, data)
 					break
 				}
 
@@ -106,7 +126,7 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 					return
 				}
 
-				for _, device := range reply {
+				for _, device := range deviceReply {
 					msg := logger.CreateMessage(*update.Message, fmt.Sprintf("Тип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v", device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
 					b.Instance.Send(msg)
 				}
