@@ -23,7 +23,7 @@ func (g *Gorm) Connect() {
 		logger.Log("Database", err.Error())
 	}
 	g.db = db
-	logger.Log("Database", "Successfully conncted")
+	logger.Log("Database", "Successfully connected")
 }
 
 func (g *Gorm) GetConnection() *gorm.DB {
