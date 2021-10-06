@@ -12,6 +12,7 @@ import (
 	device_core "github.com/hramov/jobhelper/src/core/device"
 	"github.com/hramov/jobhelper/src/modules/logger"
 	device_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/device"
+	"github.com/hramov/jobhelper/src/modules/telegram/worker"
 )
 
 type TGBot struct {
@@ -34,6 +35,10 @@ func (b *TGBot) Create() *TGBot {
 	u.Timeout = 60
 	b.Instance = bot
 	b.Update = u
+
+	worker := worker.NotificationWorker{TimePeriod: 4}
+	go worker.CheckDevices(174055421, b.Instance)
+
 	return b
 }
 
@@ -61,8 +66,6 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 			if update.Message.IsCommand() {
 				command := update.Message.Command()
 				data := update.Message.CommandArguments()
-
-				fmt.Println(command, data)
 
 				var reply []*device_core.DeviceDto
 				var err error
