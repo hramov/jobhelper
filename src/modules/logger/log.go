@@ -33,7 +33,13 @@ func writeFile(sender, message string) {
 	// if err != nil {
 	// 	Log("Logger", fmt.Sprintf("Unable to write logs to local file: %s", err.Error()))
 	// }
-	_, err = globalFile.WriteString(fmt.Sprintf("%v | %s | %s\n", time.Now(), sender, message))
+
+	timeString, err := time.Parse(time.RFC3339, fmt.Sprintf("%s", time.Now()))
+	if err != nil {
+		Log("Logger", fmt.Sprintf("Unable to parse time: %s", err.Error()))
+	}
+
+	_, err = globalFile.WriteString(fmt.Sprintf("%v | %s | %s\n", timeString, sender, message))
 	if err != nil {
 		Log("Logger", fmt.Sprintf("Unable to write logs to global file: %s", err.Error()))
 	}
