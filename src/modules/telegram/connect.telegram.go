@@ -58,8 +58,8 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 	logger.Log("TGBot:HandleQuery", "Ready to accept queries!")
 
 	for update := range updates {
-		var ok bool = true
-		if users[update.Message.Chat.ID].ID == 0 {
+		_, ok := users[update.Message.Chat.ID]
+		if !ok {
 			user, err := user_handler.Check(update.Message.Chat.ID)
 			if err != nil || user.ID == 0 {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Для работы в системе необходима регистрация")
