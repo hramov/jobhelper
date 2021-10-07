@@ -9,6 +9,7 @@ type DeviceProviderPort interface {
 	FindByDueDate(days int) ([]*DeviceDto, error)
 	FindByStringCondition(field, value string) ([]*DeviceDto, error)
 	FindByStation(station string) ([]*DeviceDto, error)
+	DeleteDevice(id uint) (*DeviceDto, error)
 }
 
 type DeviceChangeProviderPort interface {

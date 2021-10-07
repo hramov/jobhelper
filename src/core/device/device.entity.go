@@ -51,3 +51,7 @@ func (d *DeviceEntity) ChangeDeviceForChecking(device_id, temp_device_id uint) (
 	}
 	return record, nil
 }
+
+func (d *DeviceEntity) DeleteDevice(id uint) (*DeviceDto, error) {
+	return d.Provider.DeleteDevice(id)
+}

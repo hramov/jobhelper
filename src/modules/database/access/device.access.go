@@ -79,6 +79,7 @@ func (da *DeviceAccess) Create(device *device_core.DeviceDto) (*device_core.Devi
 }
 
 func (da *DeviceAccess) DeleteDevice(id uint) (*device_core.DeviceDto, error) {
+	da.Device = nil
 	device, err := da.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -87,7 +88,7 @@ func (da *DeviceAccess) DeleteDevice(id uint) (*device_core.DeviceDto, error) {
 		da.DB.Delete(&da.Device, "id=?", id)
 		return device, nil
 	}
-	return nil, fmt.Errorf("Record with ID %d not found", id)
+	return nil, fmt.Errorf("Оборудование с ID %d не найдено", id)
 }
 
 func (da *DeviceAccess) ReplaceDevice(device_id, temp_device_id uint) (*device_core.DeviceDto, error) {

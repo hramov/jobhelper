@@ -8,4 +8,5 @@ type DeviceEntityPort interface {
 	ShowDeviceByStation(station string) ([]*DeviceDto, error)
 	ShowDeviceByField(field, value string) ([]*DeviceDto, error)
 	ChangeDeviceForChecking(device_id, temp_device_id uint) (*DeviceChangeDto, error)
+	DeleteDevice(device_id uint) (*DeviceDto, error)
 }

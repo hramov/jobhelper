@@ -138,6 +138,13 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Просроченного оборудования нет!")
 							b.Instance.Send(msg)
 						}
+					case "delete":
+						deviceReply, err = device_handler.Delete(data)
+						if err == nil {
+							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Успешно удалено следующее оборудование:")
+							b.Instance.Send(msg)
+						}
+						break
 					default:
 						deviceReply, err = device_handler.GetByField(command, data)
 						break
@@ -147,6 +154,7 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 					if err != nil {
 						msg := tgbotapi.NewMessage(update.Message.Chat.ID, err.Error())
 						b.Instance.Send(msg)
+						continue
 					}
 
 					// Displaying reply
