@@ -10,7 +10,7 @@ import (
 
 func Log(sender, message string) {
 	display(sender, message)
-	writeFile(sender, message)
+	// writeFile(sender, message)
 }
 
 func display(sender, message string) {
