@@ -1,15 +1,16 @@
-package user_db
+package mapper
 
 import (
 	user_core "github.com/hramov/jobhelper/src/core/user"
+	"github.com/hramov/jobhelper/src/modules/database/model"
 )
 
 type UserMapper struct {
 	Dto   user_core.UserDto
-	Model User
+	Model model.User
 }
 
-func (um *UserMapper) DtoToModel() *User {
+func (um *UserMapper) DtoToModel() *model.User {
 	user := um.Model
 	user.ID = um.Dto.ID
 	user.LastName = um.Dto.LastName

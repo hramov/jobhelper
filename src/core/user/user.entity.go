@@ -24,3 +24,7 @@ func (ue *UserEntity) ShowWhomToSend() ([]*UserDto, error) {
 	heads = append(heads, admins...)
 	return heads, nil
 }
+
+func (ue *UserEntity) ShowUserByChatID(chat_id int64) (*UserDto, error) {
+	return ue.Provider.FindByChatID(chat_id)
+}

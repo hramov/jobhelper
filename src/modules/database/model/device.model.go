@@ -1,4 +1,4 @@
-package device_db
+package model
 
 import "time"
 

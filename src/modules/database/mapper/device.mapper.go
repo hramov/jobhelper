@@ -1,15 +1,16 @@
-package device_db
+package mapper
 
 import (
 	device_core "github.com/hramov/jobhelper/src/core/device"
+	"github.com/hramov/jobhelper/src/modules/database/model"
 )
 
 type DeviceMapper struct {
 	Dto   device_core.DeviceDto
-	Model Device
+	Model model.Device
 }
 
-func (dm *DeviceMapper) DtoToModel() *Device {
+func (dm *DeviceMapper) DtoToModel() *model.Device {
 	device := dm.Model
 	device.ID = dm.Dto.ID
 	device.Type = dm.Dto.Type

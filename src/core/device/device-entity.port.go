@@ -7,13 +7,5 @@ type DeviceEntityPort interface {
 	CreateNewDevice(deviceDto *DeviceDto) (*DeviceDto, error)
 	ShowDeviceByStation(station string) ([]*DeviceDto, error)
 	ShowDeviceByField(field, value string) ([]*DeviceDto, error)
-
-	// Create(devicekDto *DeviceDto) (*DeviceDto, error)
-	// Update(deviceID uint16, devicekDto *DeviceDto) (*DeviceDto, error)
-	// Delete(deviceID uint16) (*DeviceDto, error)
-	// FindAll() ([]*DeviceDto, error)
-	// FindById(id uint64) (*DeviceDto, error)
-	// FindByInvNumber(invNumber string) (*DeviceDto, error)
-	// FindByStation(station string) (*DeviceDto, error)
-	// FindExpires() (*DeviceDto, error)
+	ChangeDeviceForChecking(device_id, temp_device_id uint) (*DeviceChangeDto, error)
 }

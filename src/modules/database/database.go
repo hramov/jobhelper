@@ -7,8 +7,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	device_db "github.com/hramov/jobhelper/src/modules/database/device"
-	user_db "github.com/hramov/jobhelper/src/modules/database/user"
+	model "github.com/hramov/jobhelper/src/modules/database/model"
 	"github.com/hramov/jobhelper/src/modules/logger"
 )
 
@@ -31,7 +30,8 @@ func (g *Gorm) GetConnection() *gorm.DB {
 }
 
 func (g *Gorm) Migrate() error {
-	err := g.db.AutoMigrate(&device_db.Device{})
-	err = g.db.AutoMigrate(&user_db.User{})
+	err := g.db.AutoMigrate(&model.Device{})
+	err = g.db.AutoMigrate(&model.User{})
+	err = g.db.AutoMigrate(&model.DeviceChange{})
 	return err
 }
