@@ -24,28 +24,22 @@ func (nw *NotificationWorker) CheckDevices(bot *tgbotapi.BotAPI) {
 	var userEntity user_core.UserEntityPort
 	container.NamedResolve(&userEntity, "UserEntity")
 
-	now := time.Now()
-
 	for {
-		if time.Since(now) > 24*time.Hour {
+		time.Sleep(24 * time.Hour)
+		logger.Log("Notification Worker", "Started!")
 
-			logger.Log("Notification Worker", "Started!")
+		reply, err := deviceEntity.ShowExpiresDevices(nw.TimePeriod)
 
-			reply, err := deviceEntity.ShowExpiresDevices(nw.TimePeriod)
+		heads, err := userEntity.ShowWhomToSend()
+		if err != nil {
+			logger.Log("Notification Worker", err.Error())
+		}
 
-			heads, err := userEntity.ShowWhomToSend()
-			if err != nil {
-				logger.Log("Notification Worker", err.Error())
+		for _, user := range heads {
+			for _, device := range reply {
+				msg := tgbotapi.NewMessage(user.ChatID, fmt.Sprintf("Тип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v", device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
+				bot.Send(msg)
 			}
-
-			for _, user := range heads {
-				for _, device := range reply {
-					msg := tgbotapi.NewMessage(user.ChatID, fmt.Sprintf("Тип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v", device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
-					bot.Send(msg)
-				}
-			}
-
-			now = time.Now()
 		}
 	}
 }
