@@ -13,22 +13,22 @@ import (
 )
 
 func main() {
-	godotenv.Load()
-	files.CheckFile(os.Getenv("LOGS"))
+	godotenv.Load()                    // Load the .env file
+	files.CheckFile(os.Getenv("LOGS")) // Create log file if not exists
 
-	orm := &database.Gorm{}
-	orm.Connect()
-	orm.Migrate()
+	orm := &database.Gorm{} // Init GORM instance
+	orm.Connect()           // Connect to DB
+	orm.Migrate()           // Automigrating models
 
-	if err := ioc.Register(orm.GetConnection()); err != nil {
-		log.Fatal("Cannot use IoC container!")
+	if err := ioc.Register(orm.GetConnection()); err != nil { // Register DB connection instance in IoC container
+		log.Fatal("Cannot use IoC container!") // Exit from the app if IoC throws error
 	}
 
-	bot := telegram.TGBot{Token: os.Getenv("TOKEN")}
-	bot.Create()
+	bot := telegram.TGBot{Token: os.Getenv("TOKEN")} // Init Telegram Bot instance with token
+	bot.Create()                                     // Create bot
 
-	go bot.HandleQuery(bot.Update)
+	go bot.HandleQuery(bot.Update) // Goroutine that handles telegram bot queries
 
-	app := server.Gin{}
-	app.Start()
+	app := server.Gin{} // Init server instance
+	app.Start()         // Start server to handle connections
 }
