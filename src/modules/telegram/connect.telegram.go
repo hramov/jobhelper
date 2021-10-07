@@ -133,17 +133,17 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 
 				// Displaying reply
 				for _, device := range deviceReply {
-					msg := logger.CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
+					msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
 					b.Instance.Send(msg)
 				}
 
 				for _, record := range deviceChangeReply {
-					msg := logger.CreateMessage(*update.Message, fmt.Sprintf("%d успешно заменен на %d", record.DeviceID, record.TempDeviceID))
+					msg := CreateMessage(*update.Message, fmt.Sprintf("%d успешно заменен на %d", record.DeviceID, record.TempDeviceID))
 					b.Instance.Send(msg)
 				}
 
 				for _, user := range userReply {
-					msg := logger.CreateMessage(*update.Message, fmt.Sprintf("%s %s\nДолжность: %s\nСтанция: %s\nChat ID: %d", user.LastName, user.Name, user.Position, user.Station, user.ChatID))
+					msg := CreateMessage(*update.Message, fmt.Sprintf("%s %s\nДолжность: %s\nСтанция: %s\nChat ID: %d", user.LastName, user.Name, user.Position, user.Station, user.ChatID))
 					b.Instance.Send(msg)
 				}
 
