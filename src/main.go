@@ -8,7 +8,6 @@ import (
 	"github.com/hramov/jobhelper/src/modules/files"
 	"github.com/hramov/jobhelper/src/modules/ioc"
 	"github.com/hramov/jobhelper/src/modules/server"
-	"github.com/hramov/jobhelper/src/modules/telegram"
 	"github.com/joho/godotenv"
 )
 
@@ -24,10 +23,10 @@ func main() {
 		log.Fatal("Cannot use IoC container!")
 	}
 
-	bot := telegram.TGBot{Token: os.Getenv("TOKEN")}
-	bot.Create()
+	// bot := telegram.TGBot{Token: os.Getenv("TOKEN")}
+	// bot.Create()
 
-	go bot.HandleQuery(bot.Update)
+	// go bot.HandleQuery(bot.Update)
 
 	app := server.Gin{}
 	app.Start()

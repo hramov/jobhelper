@@ -8,6 +8,13 @@ import (
 func Register(router *gin.Engine) {
 
 	deviceController := controller.DeviceController{}
+	mainController := controller.MainController{}
+
+	main := router.Group("/")
+	{
+		main.GET("/", mainController.HomePage)
+	}
+
 	device := router.Group("/device")
 	{
 		device.GET("/", deviceController.FindAll)
