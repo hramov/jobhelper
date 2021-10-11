@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"reflect"
 	"strconv"
@@ -175,12 +176,20 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 					// Displaying reply
 					for _, device := range deviceReply {
 						if device.TagImageUrl != "" {
-							msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n\nhttp://%s:%s/%s", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0], os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl))
-							b.Instance.Send(msg)
-						} else {
-							msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
-							b.Instance.Send(msg)
+							url := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto?chat_id=%d&photo=http://%s:%s/%s", os.Getenv("TOKEN"), update.Message.Chat.ID, os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl)
+							logger.Log("Image sender", url)
+							_, err := http.Get(url)
+							if err != nil {
+								logger.Log("Image Sender", err.Error())
+								msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не могу отобразить изображение")
+								b.Instance.Send(msg)
+							}
+							// msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не могу отобразить изображение")
+							// msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n\nhttp://%s:%s/%s", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0], os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl))
+							// b.Instance.Send(msg)
 						}
+						msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
+						b.Instance.Send(msg)
 					}
 
 					for _, record := range deviceChangeReply {
