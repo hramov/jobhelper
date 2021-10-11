@@ -25,6 +25,10 @@ type ApiResponse struct {
 
 func UploadTagImageUrl(device_id uint, file_id string) error {
 
+	if device_id == 0 {
+		return fmt.Errorf("Не выбрано оборудование")
+	}
+
 	var deviceEntity device_core.DeviceEntityPort
 	container.NamedResolve(&deviceEntity, "DeviceEntity")
 
@@ -47,7 +51,7 @@ func UploadTagImageUrl(device_id uint, file_id string) error {
 	}
 	defer resp.Body.Close()
 	body, err = io.ReadAll(resp.Body)
-	imagePath := fmt.Sprintf("/uploads/images/%d.jpg", device_id)
+	imagePath := fmt.Sprintf("uploads/%d.jpg", device_id)
 	image, err := os.Create(imagePath)
 	if err != nil {
 		logger.Log("Image Uploader", err.Error())

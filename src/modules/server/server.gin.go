@@ -15,7 +15,7 @@ type Gin struct{}
 func (g *Gin) Start() {
 
 	router := gin.Default()
-	router.Static("/uploads", "./uploads")
+	router.Static("/uploads", "uploads")
 	router.Use(middleware.CORSMiddleware())
 
 	routes.Register(router)

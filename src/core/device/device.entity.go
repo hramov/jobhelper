@@ -1,7 +1,5 @@
 package device_core
 
-import "fmt"
-
 type DeviceEntity struct {
 	Provider       DeviceProviderPort
 	ChangeProvider DeviceChangeProviderPort
@@ -60,7 +58,6 @@ func (d *DeviceEntity) DeleteDevice(id uint) (*DeviceDto, error) {
 
 func (d *DeviceEntity) UploadImage(device_id uint, image_url string) error {
 
-	fmt.Println(device_id, image_url)
 	device, err := d.Provider.FindByID(device_id)
 	if err != nil {
 		return err
