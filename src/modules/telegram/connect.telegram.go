@@ -81,7 +81,14 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 			}
 
 			if update.Message.Photo != nil {
-				device_handler.UploadTagImageUrl(b.DeviceIDForImage, (*update.Message.Photo)[3].FileID)
+				var msg tgbotapi.MessageConfig
+				err := device_handler.UploadTagImageUrl(b.DeviceIDForImage, (*update.Message.Photo)[3].FileID)
+				if err != nil {
+					msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка "+err.Error())
+				} else {
+					msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Изображение успешно загружено!")
+				}
+				b.Instance.Send(msg)
 			}
 
 			if reflect.TypeOf(update.Message.Text).Kind() == reflect.String && update.Message.Text != "" {
@@ -108,6 +115,7 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 					case "create":
 						deviceReply, err = device_handler.Create(data)
 						b.DeviceIDForImage = deviceReply[0].ID
+						logger.Log("Create case", "Ready to upload message")
 						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
 						b.Instance.Send(msg)
 						break
@@ -166,7 +174,7 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 
 					// Displaying reply
 					for _, device := range deviceReply {
-						msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n\n%s", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0], device.TagImageUrl))
+						msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n\nhttp://%s:%s%s", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0], os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl))
 						b.Instance.Send(msg)
 					}
 
