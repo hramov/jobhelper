@@ -17,9 +17,10 @@ import (
 )
 
 type TGBot struct {
-	Instance *tgbotapi.BotAPI
-	Update   tgbotapi.UpdateConfig
-	Token    string
+	Instance         *tgbotapi.BotAPI
+	Update           tgbotapi.UpdateConfig
+	Token            string
+	DeviceIDForImage uint
 }
 
 type MessageHistory map[int64]*tgbotapi.Message
@@ -79,9 +80,12 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 				continue
 			}
 
+			if update.Message.Photo != nil {
+				device_handler.UploadTagImageUrl(b.DeviceIDForImage, (*update.Message.Photo)[3].FileID)
+			}
+
 			if reflect.TypeOf(update.Message.Text).Kind() == reflect.String && update.Message.Text != "" {
 				messageHistory[update.Message.Chat.ID] = update.Message
-
 				if update.Message.IsCommand() {
 					command := update.Message.Command()
 					data := update.Message.CommandArguments()
@@ -103,6 +107,9 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 						break
 					case "create":
 						deviceReply, err = device_handler.Create(data)
+						b.DeviceIDForImage = deviceReply[0].ID
+						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
+						b.Instance.Send(msg)
 						break
 					case "change":
 						deviceChangeReply, err = device_handler.Change(data)
@@ -159,7 +166,7 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 
 					// Displaying reply
 					for _, device := range deviceReply {
-						msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
+						msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n\n%s", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0], device.TagImageUrl))
 						b.Instance.Send(msg)
 					}
 

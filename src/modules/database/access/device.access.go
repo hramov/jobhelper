@@ -118,3 +118,10 @@ func (da *DeviceAccess) ReplaceTempDevice(temp_device_id, device_id uint) (*devi
 	}
 	return device, nil
 }
+
+func (da *DeviceAccess) SaveDevice(device *device_core.DeviceDto) (*device_core.DeviceDto, error) {
+	dm := mapper.DeviceMapper{Dto: *device}
+	deviceModel := dm.DtoToModel()
+	da.DB.Save(deviceModel)
+	return device, nil
+}

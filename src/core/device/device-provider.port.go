@@ -10,6 +10,7 @@ type DeviceProviderPort interface {
 	FindByStringCondition(field, value string) ([]*DeviceDto, error)
 	FindByStation(station string) ([]*DeviceDto, error)
 	DeleteDevice(id uint) (*DeviceDto, error)
+	SaveDevice(device *DeviceDto) (*DeviceDto, error)
 }
 
 type DeviceChangeProviderPort interface {

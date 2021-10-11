@@ -22,6 +22,7 @@ func (dm *DeviceMapper) DtoToModel() *model.Device {
 	device.Status = dm.Dto.Status
 	device.PrevCheck = dm.Dto.PrevCheck
 	device.NextCheck = dm.Dto.NextCheck
+	device.TagImageUrl = dm.Dto.TagImageUrl
 	return &device
 }
 
@@ -37,5 +38,6 @@ func (dm *DeviceMapper) ModelToDto() *device_core.DeviceDto {
 	device.Status = dm.Model.Status
 	device.PrevCheck = dm.Model.PrevCheck
 	device.NextCheck = dm.Model.NextCheck
+	device.TagImageUrl = dm.Model.TagImageUrl
 	return &device
 }

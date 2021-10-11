@@ -13,4 +13,5 @@ type DeviceDto struct {
 	Status      string    `json:"status"`
 	PrevCheck   time.Time `json:"prev_check"`
 	NextCheck   time.Time `json:"next_check"`
+	TagImageUrl string    `json:"tag_iamge_url"`
 }

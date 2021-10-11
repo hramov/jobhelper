@@ -9,4 +9,5 @@ type DeviceEntityPort interface {
 	ShowDeviceByField(field, value string) ([]*DeviceDto, error)
 	ChangeDeviceForChecking(device_id, temp_device_id uint) (*DeviceChangeDto, error)
 	DeleteDevice(device_id uint) (*DeviceDto, error)
+	UploadImage(device_id uint, image_url string) error
 }
