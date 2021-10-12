@@ -1,5 +1,5 @@
 # JobHelper
-![Jobhelper logo](https://support.dinnerbooking.com/wp-content/uploads/2020/06/system-400x200.png)
+![Jobhelper logo](https://png.pngtree.com/png-vector/20190413/ourmid/pngtree-vector-solar-system-icon-png-image_943869.jpg)
 ## Система помощи электромеханику, обслуживающему станцию.
 ### Позволяет: 
 - [X] использовать сервис только зарегистрированным пользователям
