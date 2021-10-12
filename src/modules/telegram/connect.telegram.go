@@ -26,8 +26,6 @@ type TGBot struct {
 	Admin            string
 }
 
-type MessageHistory map[int64]*tgbotapi.Message
-
 type Users map[int64]*user_core.UserDto
 
 type Message = *tgbotapi.Message
@@ -51,7 +49,6 @@ func (b *TGBot) Create() *TGBot {
 
 func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 
-	messageHistory := make(MessageHistory)
 	users := make(Users)
 
 	updates, err := b.Instance.GetUpdatesChan(updateConfig)
@@ -95,7 +92,6 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 			}
 
 			if reflect.TypeOf(update.Message.Text).Kind() == reflect.String && update.Message.Text != "" {
-				messageHistory[update.Message.Chat.ID] = update.Message
 				if update.Message.IsCommand() {
 					command := update.Message.Command()
 					data := update.Message.CommandArguments()
@@ -219,6 +215,6 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 
 func infoMessage() string {
 	commands := fmt.Sprintf("Список доступных команд:\n/all - посмотреть все оборудование\n/create <Данные оборудования> - записать новое оборудование в базу\n/check <Количество дней до срока проверки> - проверка просроченного оборудования\n/<Поле оборудования> <Значение> - выборка оборудования по определенным полям\n")
-	format := fmt.Sprintf("Запись оборудования имеет следующие поля:\ntype (Тип);title (Название);(description) Описание;inv_number (Номер блока);station (Станция); location(Место);prev_check (Дата проверки (дд.мм.гггг));next_check(Дата следующей проверки (дд.мм.гггг))")
+	format := fmt.Sprintf("Запись оборудования имеет следующие поля:\ntype (Тип);title (Название);(description) Описание;inv_number (Номер блока);station (Станция); location(Место); status(Статус: 'Основной / Подменный');prev_check (Дата проверки (дд.мм.гггг));next_check(Дата следующей проверки (дд.мм.гггг))")
 	return fmt.Sprintf("%s\n%s", commands, format)
 }

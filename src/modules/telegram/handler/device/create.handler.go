@@ -15,12 +15,12 @@ func Create(data string) ([]*device_core.DeviceDto, error) {
 	container.NamedResolve(&deviceEntity, "DeviceEntity")
 
 	fields := strings.Split(data, ";")
-	if len(fields) < 8 {
+	if len(fields) < 9 {
 		return nil, fmt.Errorf("Не хватает данных")
 	}
 
-	prevCheck, err := timePrepare(fields[6])
-	nextCheck, err := timePrepare(fields[7])
+	prevCheck, err := timePrepare(fields[7])
+	nextCheck, err := timePrepare(fields[8])
 
 	if err != nil {
 		return nil, fmt.Errorf("Не удалось создать запись: %s", err.Error())
@@ -33,7 +33,7 @@ func Create(data string) ([]*device_core.DeviceDto, error) {
 		InvNumber:   fields[3],
 		Station:     fields[4],
 		Location:    fields[5],
-		Status:      "В работе",
+		Status:      fields[6],
 		PrevCheck:   prevCheck,
 		NextCheck:   nextCheck,
 	}
