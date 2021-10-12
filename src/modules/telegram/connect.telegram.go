@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"reflect"
@@ -143,6 +144,10 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 						break
 					case "all":
 						deviceReply, err = device_handler.GetAll()
+						if len(deviceReply) == 0 {
+							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Нет добавленного оборудования")
+							b.Instance.Send(msg)
+						}
 						break
 					case "check":
 						days, err := strconv.Atoi(data)
@@ -177,6 +182,7 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 					for _, device := range deviceReply {
 						if device.TagImageUrl != "" {
 							url := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto?chat_id=%d&photo=http://%s:%s/%s", os.Getenv("TOKEN"), update.Message.Chat.ID, os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl)
+							log.Println(url)
 							logger.Log("Image sender", url)
 							_, err := http.Get(url)
 							if err != nil {
