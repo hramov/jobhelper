@@ -23,6 +23,7 @@ type TGBot struct {
 	Update           tgbotapi.UpdateConfig
 	Token            string
 	DeviceIDForImage uint
+	Admin            string
 }
 
 type MessageHistory map[int64]*tgbotapi.Message
@@ -65,7 +66,7 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 		if !ok {
 			user, err := user_handler.Check(update.Message.Chat.ID)
 			if err != nil || user.ID == 0 {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Для работы в системе необходима регистрация")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Для работы в системе необходима регистрация. Пожалуйста, напишите об этом @%s. Ваш ChatID: %d", b.Admin, update.Message.Chat.ID))
 				b.Instance.Send(msg)
 				ok = false
 				continue

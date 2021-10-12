@@ -1,5 +1,11 @@
 package device_core
 
+import (
+	"fmt"
+
+	"github.com/hramov/jobhelper/src/modules/files"
+)
+
 type DeviceEntity struct {
 	Provider       DeviceProviderPort
 	ChangeProvider DeviceChangeProviderPort
@@ -53,6 +59,10 @@ func (d *DeviceEntity) ChangeDeviceForChecking(device_id, temp_device_id uint) (
 }
 
 func (d *DeviceEntity) DeleteDevice(id uint) (*DeviceDto, error) {
+	err := files.DeleteFile(fmt.Sprintf("uploads/%d.jpg", id))
+	if err != nil {
+		return nil, err
+	}
 	return d.Provider.DeleteDevice(id)
 }
 

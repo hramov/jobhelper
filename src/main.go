@@ -24,8 +24,8 @@ func main() {
 		log.Fatal("Cannot use IoC container!") // Exit from the app if IoC throws error
 	}
 
-	bot := telegram.TGBot{Token: os.Getenv("TOKEN")} // Init Telegram Bot instance with token
-	bot.Create()                                     // Create bot
+	bot := telegram.TGBot{Token: os.Getenv("TOKEN"), Admin: "therealhramov"} // Init Telegram Bot instance with token
+	bot.Create()                                                             // Create bot
 
 	go bot.HandleQuery(bot.Update) // Goroutine that handles telegram bot queries
 
