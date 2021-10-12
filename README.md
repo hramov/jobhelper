@@ -1,5 +1,4 @@
 # JobHelper
-![Jobhelper logo](https://png.pngtree.com/png-vector/20190413/ourmid/pngtree-vector-solar-system-icon-png-image_943869.jpg)
 ## Система помощи электромеханику, обслуживающему станцию.
 ### Позволяет: 
 - [X] использовать сервис только зарегистрированным пользователям
