@@ -1,4 +1,5 @@
 # JobHelper
+![Jobhelper logo](https://support.dinnerbooking.com/wp-content/uploads/2020/06/system-400x200.png)
 ## Система помощи электромеханику, обслуживающему станцию.
 ### Позволяет: 
 - [X] использовать сервис только зарегистрированным пользователям
