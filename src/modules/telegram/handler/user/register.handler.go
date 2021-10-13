@@ -14,8 +14,8 @@ func Register(data string) ([]*user_core.UserDto, error) {
 	var userEntity user_core.UserEntityPort
 	container.NamedResolve(&userEntity, "UserEntity")
 
-	fields := strings.Split(data, " ")
-	if len(fields) < 6 {
+	fields := strings.Split(data, ";")
+	if len(fields) != 6 {
 		return nil, fmt.Errorf("Не хватает данных")
 	}
 

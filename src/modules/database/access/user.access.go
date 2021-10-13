@@ -16,7 +16,6 @@ type UserAccess struct {
 }
 
 func (ua *UserAccess) FindAll() ([]*user_core.UserDto, error) {
-	ua.User = nil
 	var users []*user_core.UserDto
 	ua.DB.Find(&ua.Users)
 	for i := 0; i < len(ua.Users); i++ {
@@ -77,7 +76,11 @@ func (ua *UserAccess) Create(user *user_core.UserDto) (*user_core.UserDto, error
 
 func (ua *UserAccess) FindByChatID(chat_id int64) (*user_core.UserDto, error) {
 	ua.User = nil
+	var user *user_core.UserDto
 	ua.DB.Find(&ua.User, "chat_id=?", chat_id)
 	um := mapper.UserMapper{Model: *ua.User}
-	return um.ModelToDto(), nil
+	if user = um.ModelToDto(); user.ID == 0 {
+		return nil, fmt.Errorf("Пользователь не найден")
+	}
+	return user, nil
 }

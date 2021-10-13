@@ -15,7 +15,7 @@ func Create(data string) ([]*device_core.DeviceDto, error) {
 	container.NamedResolve(&deviceEntity, "DeviceEntity")
 
 	fields := strings.Split(data, ";")
-	if len(fields) < 9 {
+	if len(fields) != 9 {
 		return nil, fmt.Errorf("Не хватает данных")
 	}
 

@@ -10,7 +10,7 @@ func Check(chat_id int64) (*user_core.UserDto, error) {
 	container.NamedResolve(&userEntity, "UserEntity")
 
 	user, err := userEntity.ShowUserByChatID(chat_id)
-	if err != nil || user.ID == 0 {
+	if err != nil {
 		return nil, err
 	}
 
