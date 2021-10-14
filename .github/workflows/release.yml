@@ -50,4 +50,4 @@ jobs:
                 cd /opt/jobhelper
                 docker-compose down
                 docker rmi hramov/jobhelper:latest
-                docker-compose up
+                docker-compose up -d
