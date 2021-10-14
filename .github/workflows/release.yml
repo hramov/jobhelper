@@ -46,4 +46,8 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.PORT }}
-        script: /opt/jobhelper/build.sh
+        script: |
+                cd /opt/jobhelper
+                docker-compose down
+                docker rmi hramov/jobhelper:latest
+                docker-compose up
