@@ -6,7 +6,7 @@ func AuthMiddleware(role string, method string) bool {
 	roles := rules()
 	perms := roles[role]
 	for _, perm := range perms {
-		if perm == method {
+		if perm == method || perm == "*" {
 			return true
 		}
 	}

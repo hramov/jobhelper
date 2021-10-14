@@ -14,18 +14,23 @@ import (
 	"github.com/hramov/jobhelper/src/modules/logger"
 	device_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/device"
 	user_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/user"
+	"github.com/hramov/jobhelper/src/modules/telegram/middleware"
 	"github.com/hramov/jobhelper/src/modules/telegram/worker"
 )
 
 type TGBot struct {
-	Instance         *tgbotapi.BotAPI
-	Update           tgbotapi.UpdateConfig
-	Token            string
-	DeviceIDForImage uint
-	Admin            string
+	Instance *tgbotapi.BotAPI
+	Update   tgbotapi.UpdateConfig
+	Token    string
+	Admin    string
+	Clients  map[int64]*Client
 }
 
-type Users map[int64]*user_core.UserDto
+type Client struct {
+	User             *user_core.UserDto
+	DeviceIDForImage uint
+	ErrChan          chan error
+}
 
 type Message = *tgbotapi.Message
 type Bot = *tgbotapi.BotAPI
@@ -39,6 +44,7 @@ func (b *TGBot) Create() *TGBot {
 	u.Timeout = 60
 	b.Instance = bot
 	b.Update = u
+	b.Clients = make(map[int64]*Client)
 
 	worker := worker.NotificationWorker{TimePeriod: 10}
 	go worker.CheckDevices(b.Instance)
@@ -48,8 +54,6 @@ func (b *TGBot) Create() *TGBot {
 
 func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 
-	users := make(Users)
-
 	updates, err := b.Instance.GetUpdatesChan(updateConfig)
 	if err != nil {
 		logger.Log("TGBot:HandleQuery", err.Error())
@@ -58,15 +62,16 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 	logger.Log("TGBot:HandleQuery", "Ready to accept queries!")
 
 	for update := range updates {
-		_, ok := users[update.Message.Chat.ID]
+
+		_, ok := b.Clients[update.Message.Chat.ID]
 		if !ok {
 			user, err := user_handler.Check(update.Message.Chat.ID)
 			if err != nil {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Для работы в системе необходима регистрация. Пожалуйста, напишите об этом @%s. Ваш ChatID: %d", b.Admin, update.Message.Chat.ID))
-				b.Instance.Send(msg)
+				b.sendMessage(update.Message.Chat.ID, fmt.Sprintf("Для работы в системе необходима регистрация. Пожалуйста, напишите об этом @%s. Ваш ChatID: %d", b.Admin, update.Message.Chat.ID))
 				continue
 			}
-			users[update.Message.Chat.ID] = user
+			client := &Client{User: user, ErrChan: make(chan error)}
+			b.Clients[update.Message.Chat.ID] = client
 			ok = true
 		}
 
@@ -77,244 +82,174 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 		logger.Log("TGBot:HandleQuery", fmt.Sprintf("New query: %s, ChatID: %d, MessageID: %d", update.Message.Text, update.Message.Chat.ID, update.Message.MessageID))
 
 		if update.Message.Photo != nil {
-			var msg tgbotapi.MessageConfig
-			err := device_handler.UploadTagImageUrl(b.DeviceIDForImage, (*update.Message.Photo)[3].FileID)
+			err := device_handler.UploadTagImageUrl(b.Clients[update.Message.Chat.ID].DeviceIDForImage, (*update.Message.Photo)[3].FileID)
 			if err != nil {
-				msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: "+err.Error())
+				b.sendMessage(update.Message.Chat.ID, "Ошибка: "+err.Error())
 			} else {
-				msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Изображение успешно загружено!")
+				b.sendMessage(update.Message.Chat.ID, "Изображение успешно загружено!")
 			}
-			b.Instance.Send(msg)
 		}
 
 		if reflect.TypeOf(update.Message.Text).Kind() == reflect.String && update.Message.Text != "" {
 			if update.Message.IsCommand() {
-				command := update.Message.Command()
 
-				// Check!!! //
-				// perm := middleware.AuthMiddleware(users[update.Message.Chat.ID].Role, command)
-				// if !perm {
-				// 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вам запрещен доступ к этой команде!")
-				// 	b.Instance.Send(msg)
-				// 	continue
-				// }
-				//*********//
-
-				data := update.Message.CommandArguments()
-
-				var deviceReply []*device_core.DeviceDto
-				var deviceChangeReply []*device_core.DeviceChangeDto
-				var userReply []*user_core.UserDto
-
-				var err error
-
-				switch command {
-				case "start":
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Добро пожаловать в систему отслеживания проверки оборудования. Список доступных команд можно посмотреть по /info")
-					b.Instance.Send(msg)
-					break
-				case "info":
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, infoMessage())
-					b.Instance.Send(msg)
-					break
-				case "create":
-					deviceReply, err = device_handler.Create(data)
-					b.DeviceIDForImage = deviceReply[0].ID
-					logger.Log("Create case", "Ready to upload message")
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
-					b.Instance.Send(msg)
-					break
-				case "photo":
-					if data != "" {
-						deviceID, err := strconv.Atoi(data)
-						if err != nil {
-							logger.Log("Photo handler", err.Error())
-							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка загрузки фотографии")
-							b.Instance.Send(msg)
-						}
-						b.DeviceIDForImage = uint(deviceID)
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
-						b.Instance.Send(msg)
-					} else {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, введите команду с идентификатором оборудования")
-						b.Instance.Send(msg)
-					}
-				case "change":
-					deviceChangeReply, err = device_handler.Change(data)
-					break
-				case "myid":
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%d", update.Message.Chat.ID))
-					b.Instance.Send(msg)
-					break
-				case "register":
-					_, err = user_handler.Register(data)
-					if err != nil {
-						logger.Log("TGBot:Handler:Register", err.Error())
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка при создании пользователя")
-						b.Instance.Send(msg)
-						break
-					}
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пользователь успешно зарегистрирован")
-					b.Instance.Send(msg)
-					break
-				case "whoami":
-					userReply, err = user_handler.WhoAmI(update.Message.Chat.ID)
-					break
-				case "all":
-					deviceReply, err = device_handler.GetAll()
-					if len(deviceReply) == 0 {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Нет добавленного оборудования")
-						b.Instance.Send(msg)
-					}
-					break
-				case "check":
-					if data == "" {
-						data = "14"
-					}
-					days, err := strconv.Atoi(data)
-					if err != nil {
-						break
-					}
-					deviceReply, err = device_handler.Check(days)
-					if len(deviceReply) == 0 {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Просроченного оборудования нет!")
-						b.Instance.Send(msg)
-					}
-				case "delete":
-					deviceReply, err = device_handler.Delete(data)
-					if err == nil {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Успешно удалено следующее оборудование:")
-						b.Instance.Send(msg)
-					}
-					break
-				default:
-					deviceReply, err = device_handler.GetByField(command, data)
-					if len(deviceReply) == 0 {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось найти оборудование")
-						b.Instance.Send(msg)
-					}
-					break
-				}
-
-				// Displaying error if exists
-				if err != nil {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, err.Error())
-					b.Instance.Send(msg)
-					continue
-				}
-
-				// Displaying reply
-				for _, device := range deviceReply {
-					if device.TagImageUrl != "" {
-						url := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto?chat_id=%d&photo=http://%s:%s/%s", os.Getenv("TOKEN"), update.Message.Chat.ID, os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl)
-						_, err := http.Get(url)
-						if err != nil {
-							logger.Log("Image Sender", err.Error())
-							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не могу отобразить изображение")
-							b.Instance.Send(msg)
-							continue
-						}
-					}
-
-					msg := CreateMessage(*update.Message, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n\nhttp://%s:%s/%s", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0], os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl))
-					b.Instance.Send(msg)
-				}
-
-				for _, record := range deviceChangeReply {
-					msg := CreateMessage(*update.Message, fmt.Sprintf("%d успешно заменен на %d", record.DeviceID, record.TempDeviceID))
-					b.Instance.Send(msg)
-				}
-
-				for _, user := range userReply {
-					msg := CreateMessage(*update.Message, fmt.Sprintf("%s %s\nДолжность: %s\nСтанция: %s\nChat ID: %d", user.LastName, user.Name, user.Position, user.Station, user.ChatID))
-					b.Instance.Send(msg)
-				}
+				go b.commands(update.Message)
+				go b.errors(update.Message)
 
 			} else {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Неправильный формат комманды. См. /info")
-				b.Instance.Send(msg)
+				b.sendMessage(update.Message.Chat.ID, "Неправильный формат комманды. См. /info")
 			}
 		}
 	}
 
 }
 
-// func (b *TGBot) sendMessage(chat_id int64, message string) {
-// 	msg := tgbotapi.NewMessage(chat_id, message)
-// 	b.Instance.Send(msg)
-// }
+func (b *TGBot) errors(message *tgbotapi.Message) {
+	err := <-b.Clients[message.Chat.ID].ErrChan
+	logger.Log("Errors channel", err.Error())
+	b.sendMessage(message.Chat.ID, err.Error())
+}
 
-// func (b *TGBot) commandSwitcher(chat_id int64, command string, data string) {
-// 	switch command {
-// 	case "start":
-// 		b.sendMessage(chat_id, "Добро пожаловать в систему отслеживания проверки оборудования. Список доступных команд можно посмотреть по /info")
-// 	case "info":
-// 		b.sendMessage(chat_id, infoMessage())
-// 	case "create":
-// 		deviceReply, err := device_handler.Create(data)
-// 		b.DeviceIDForImage = deviceReply[0].ID
-// 		logger.Log("Create case", "Ready to upload message")
-// 		b.sendMessage(chat_id, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
-// 	case "change":
-// 		deviceChangeReply, err = device_handler.Change(data)
-// 		break
-// 	case "myid":
-// 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%d", update.Message.Chat.ID))
-// 		b.Instance.Send(msg)
-// 		break
-// 	case "register":
-// 		_, err = user_handler.Register(data)
-// 		if err != nil {
-// 			logger.Log("TGBot:Handler:Register", err.Error())
-// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка при создании пользователя")
-// 			b.Instance.Send(msg)
-// 			break
-// 		}
-// 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пользователь успешно зарегистрирован")
-// 		b.Instance.Send(msg)
-// 		break
-// 	case "whoami":
-// 		userReply, err = user_handler.WhoAmI(update.Message.Chat.ID)
-// 		break
-// 	case "all":
-// 		deviceReply, err = device_handler.GetAll()
-// 		if len(deviceReply) == 0 {
-// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Нет добавленного оборудования")
-// 			b.Instance.Send(msg)
-// 		}
-// 		break
-// 	case "check":
-// 		if data == "" {
-// 			data = "14"
-// 		}
-// 		days, err := strconv.Atoi(data)
-// 		if err != nil {
-// 			break
-// 		}
-// 		deviceReply, err = device_handler.Check(days)
-// 		if len(deviceReply) == 0 {
-// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Просроченного оборудования нет!")
-// 			b.Instance.Send(msg)
-// 		}
-// 	case "delete":
-// 		deviceReply, err = device_handler.Delete(data)
-// 		if err == nil {
-// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Успешно удалено следующее оборудование:")
-// 			b.Instance.Send(msg)
-// 		}
-// 		break
-// 	default:
-// 		deviceReply, err = device_handler.GetByField(command, data)
-// 		if len(deviceReply) == 0 {
-// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось найти оборудование")
-// 			b.Instance.Send(msg)
-// 		}
-// 		break
-// 	}
-// }
+func (b *TGBot) sendMessage(chat_id int64, message string) {
+	msg := tgbotapi.NewMessage(chat_id, message)
+	b.Instance.Send(msg)
+}
 
-func infoMessage() string {
-	commands := fmt.Sprintf("Список доступных команд:\n/all - посмотреть все оборудование\n/create <Данные оборудования> - записать новое оборудование в базу\n/check <Количество дней до срока проверки> - проверка просроченного оборудования\n/<Поле оборудования> <Значение> - выборка оборудования по определенным полям\n")
-	format := fmt.Sprintf("Запись оборудования имеет следующие поля:\ntype (Тип);title (Название);(description) Описание;inv_number (Номер блока);station (Станция); location(Место); status(Статус: 'Основной / Подменный');prev_check (Дата проверки (дд.мм.гггг));next_check(Дата следующей проверки (дд.мм.гггг))")
-	return fmt.Sprintf("%s\n%s", commands, format)
+func (b *TGBot) commands(message *tgbotapi.Message) {
+
+	command := message.Command()
+	data := message.CommandArguments()
+
+	chat_id := message.Chat.ID
+	client := b.Clients[chat_id]
+
+	perm := middleware.AuthMiddleware(client.User.Role, command)
+	if !perm {
+		client.ErrChan <- fmt.Errorf("Вам запрещен доступ к этой команде!")
+		return
+	}
+
+	switch command {
+	case "start":
+		b.sendMessage(chat_id, "Добро пожаловать в систему отслеживания проверки оборудования. Список доступных команд можно посмотреть по /info")
+		break
+	case "info":
+		commands := fmt.Sprintf("Список доступных команд:\n/all - посмотреть все оборудование\n/create <Данные оборудования> - записать новое оборудование в базу\n/check <Количество дней до срока проверки> - проверка просроченного оборудования\n/<Поле оборудования> <Значение> - выборка оборудования по определенным полям\n")
+		format := fmt.Sprintf("Запись оборудования имеет следующие поля:\ntype (Тип);title (Название);(description) Описание;inv_number (Номер блока);station (Станция); location(Место); status(Статус: 'Основной / Подменный');prev_check (Дата проверки (дд.мм.гггг));next_check(Дата следующей проверки (дд.мм.гггг))")
+		b.sendMessage(chat_id, fmt.Sprintf("%s\n%s", commands, format))
+		break
+	case "create":
+		result, err := device_handler.Create(data)
+		if err != nil {
+			client.ErrChan <- err
+			return
+		}
+		b.showDeviceReply(chat_id, result, client.ErrChan)
+		client.DeviceIDForImage = result[0].ID
+		logger.Log("Create case", "Ready to upload message")
+		b.sendMessage(chat_id, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
+		break
+	case "photo":
+		if data != "" {
+			result, err := strconv.Atoi(data)
+			if err != nil {
+				logger.Log("Photo handler", err.Error())
+				client.ErrChan <- err
+				return
+			}
+			client.DeviceIDForImage = uint(result)
+			b.sendMessage(chat_id, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
+		} else {
+			b.sendMessage(chat_id, "Пожалуйста, введите команду с идентификатором оборудования")
+		}
+	case "change":
+		result, err := device_handler.Change(data)
+		if err != nil {
+			client.ErrChan <- err
+			return
+		}
+		b.sendMessage(chat_id, fmt.Sprintf("%d успешно заменен на %d", result.DeviceID, result.TempDeviceID))
+		break
+	case "myid":
+		b.sendMessage(chat_id, fmt.Sprintf("%d", chat_id))
+		break
+	case "register":
+		_, err := user_handler.Register(data)
+		if err != nil {
+			client.ErrChan <- err
+			break
+		}
+		b.sendMessage(chat_id, "Пользователь успешно зарегистрирован")
+		break
+	case "whoami":
+		result, err := user_handler.WhoAmI(chat_id)
+		if err != nil {
+			client.ErrChan <- err
+			return
+		}
+		b.sendMessage(chat_id, fmt.Sprintf("%s %s\nДолжность: %s\nСтанция: %s\nChat ID: %d", result.LastName, result.Name, result.Position, result.Station, result.ChatID))
+		break
+	case "all":
+		result, err := device_handler.GetAll()
+		if err != nil {
+			client.ErrChan <- err
+			return
+		}
+		if len(result) == 0 {
+			b.sendMessage(chat_id, "Нет добавленного оборудования")
+			return
+		}
+		b.showDeviceReply(chat_id, result, client.ErrChan)
+		break
+	case "check":
+		if data == "" {
+			data = os.Getenv("DEFAULT_CHECK_DAYS")
+		}
+		days, err := strconv.Atoi(data)
+		if err != nil {
+			client.ErrChan <- err
+			return
+		}
+		result, err := device_handler.Check(days)
+		if len(result) == 0 {
+			b.sendMessage(chat_id, "Просроченного оборудования нет!")
+		}
+	case "delete":
+		result, err := device_handler.Delete(data)
+		if err == nil {
+			client.ErrChan <- err
+			return
+		}
+		b.sendMessage(chat_id, "Успешно удалено следующее оборудование:")
+		b.showDeviceReply(chat_id, result, client.ErrChan)
+		break
+	default:
+		result, err := device_handler.GetByField(command, data)
+		if err != nil {
+			client.ErrChan <- err
+			return
+		}
+		if len(result) == 0 {
+			b.sendMessage(chat_id, "Не удалось найти оборудование")
+			return
+		}
+		b.showDeviceReply(chat_id, result, client.ErrChan)
+		break
+	}
+}
+
+func (b *TGBot) showDeviceReply(chat_id int64, devices []*device_core.DeviceDto, errChan chan error) {
+	for _, device := range devices {
+		if device.TagImageUrl != "" {
+			url := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto?chat_id=%d&photo=http://%s:%s/%s", os.Getenv("TOKEN"), chat_id, os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl)
+			_, err := http.Get(url)
+			if err != nil {
+				errChan <- err
+				logger.Log("Image Sender", err.Error())
+				b.sendMessage(chat_id, "Не могу отобразить изображение")
+				return
+			}
+		}
+		b.sendMessage(chat_id, fmt.Sprintf("ID: %d\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v\n\nhttp://%s:%s/%s", device.ID, device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0], os.Getenv("APP_HOST"), os.Getenv("APP_PORT"), device.TagImageUrl))
+	}
 }

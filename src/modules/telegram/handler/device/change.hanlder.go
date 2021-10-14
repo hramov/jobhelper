@@ -9,7 +9,7 @@ import (
 	device_core "github.com/hramov/jobhelper/src/core/device"
 )
 
-func Change(data string) ([]*device_core.DeviceChangeDto, error) {
+func Change(data string) (*device_core.DeviceChangeDto, error) {
 	var deviceEntity device_core.DeviceEntityPort
 	container.NamedResolve(&deviceEntity, "DeviceEntity")
 
@@ -33,5 +33,5 @@ func Change(data string) ([]*device_core.DeviceChangeDto, error) {
 		return nil, err
 	}
 
-	return []*device_core.DeviceChangeDto{record}, nil
+	return record, nil
 }

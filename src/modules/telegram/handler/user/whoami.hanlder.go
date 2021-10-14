@@ -7,7 +7,7 @@ import (
 	user_core "github.com/hramov/jobhelper/src/core/user"
 )
 
-func WhoAmI(chat_id int64) ([]*user_core.UserDto, error) {
+func WhoAmI(chat_id int64) (*user_core.UserDto, error) {
 	var userEntity user_core.UserEntityPort
 	container.NamedResolve(&userEntity, "UserEntity")
 
@@ -20,5 +20,5 @@ func WhoAmI(chat_id int64) ([]*user_core.UserDto, error) {
 		return nil, fmt.Errorf("Кажется, вы не зарегистрированы")
 	}
 
-	return []*user_core.UserDto{user}, nil
+	return user, nil
 }
