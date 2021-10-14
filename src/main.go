@@ -21,7 +21,7 @@ func main() {
 	orm.Migrate()           // Automigrating models
 
 	if err := ioc.Register(orm.GetConnection()); err != nil { // Register DB connection instance in IoC container
-		log.Fatal("Cannot use IoC container!") // Exit from the app if IoC throws error
+		log.Fatal("Cannot use IoC container!!!") // Exit from the app if IoC throws error
 	}
 
 	bot := telegram.TGBot{Token: os.Getenv("TOKEN"), Admin: "therealhramov"} // Init Telegram Bot instance with token
