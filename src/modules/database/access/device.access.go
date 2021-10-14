@@ -46,10 +46,10 @@ func (da *DeviceAccess) FindByStation(station string) ([]*device_core.DeviceDto,
 }
 
 func (da *DeviceAccess) FindByDueDate(days int) ([]*device_core.DeviceDto, error) {
-	da.Devices = nil
+	da.Devices = []*model.Device{}
 	var devices []*device_core.DeviceDto
 	da.DB.Find(&da.Devices, "next_check < ?", time.Now().AddDate(0, 0, days))
-	if len(devices) == 0 {
+	if len(da.Devices) == 0 {
 		return nil, nil
 	}
 	for i := 0; i < len(da.Devices); i++ {

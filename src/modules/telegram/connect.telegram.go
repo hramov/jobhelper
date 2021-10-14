@@ -124,6 +124,21 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
 					b.Instance.Send(msg)
 					break
+				case "photo":
+					if data != "" {
+						deviceID, err := strconv.Atoi(data)
+						if err != nil {
+							logger.Log("Photo handler", err.Error())
+							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка загрузки фотографии")
+							b.Instance.Send(msg)
+						}
+						b.DeviceIDForImage = uint(deviceID)
+						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
+						b.Instance.Send(msg)
+					} else {
+						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, введите команду с идентификатором оборудования")
+						b.Instance.Send(msg)
+					}
 				case "change":
 					deviceChangeReply, err = device_handler.Change(data)
 					break
