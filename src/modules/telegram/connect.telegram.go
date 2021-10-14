@@ -14,7 +14,6 @@ import (
 	"github.com/hramov/jobhelper/src/modules/logger"
 	device_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/device"
 	user_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/user"
-	"github.com/hramov/jobhelper/src/modules/telegram/middleware"
 	"github.com/hramov/jobhelper/src/modules/telegram/worker"
 )
 
@@ -93,12 +92,12 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 				command := update.Message.Command()
 
 				// Check!!! //
-				perm := middleware.AuthMiddleware(users[update.Message.Chat.ID].Role, command)
-				if !perm {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вам запрещен доступ к этой команде!")
-					b.Instance.Send(msg)
-					continue
-				}
+				// perm := middleware.AuthMiddleware(users[update.Message.Chat.ID].Role, command)
+				// if !perm {
+				// 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вам запрещен доступ к этой команде!")
+				// 	b.Instance.Send(msg)
+				// 	continue
+				// }
 				//*********//
 
 				data := update.Message.CommandArguments()
@@ -224,6 +223,80 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 	}
 
 }
+
+// func (b *TGBot) sendMessage(chat_id int64, message string) {
+// 	msg := tgbotapi.NewMessage(chat_id, message)
+// 	b.Instance.Send(msg)
+// }
+
+// func (b *TGBot) commandSwitcher(chat_id int64, command string, data string) {
+// 	switch command {
+// 	case "start":
+// 		b.sendMessage(chat_id, "Добро пожаловать в систему отслеживания проверки оборудования. Список доступных команд можно посмотреть по /info")
+// 	case "info":
+// 		b.sendMessage(chat_id, infoMessage())
+// 	case "create":
+// 		deviceReply, err := device_handler.Create(data)
+// 		b.DeviceIDForImage = deviceReply[0].ID
+// 		logger.Log("Create case", "Ready to upload message")
+// 		b.sendMessage(chat_id, "Пожалуйста, загрузите фоторафию бирки для этого оборудования в ответном сообщении")
+// 	case "change":
+// 		deviceChangeReply, err = device_handler.Change(data)
+// 		break
+// 	case "myid":
+// 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%d", update.Message.Chat.ID))
+// 		b.Instance.Send(msg)
+// 		break
+// 	case "register":
+// 		_, err = user_handler.Register(data)
+// 		if err != nil {
+// 			logger.Log("TGBot:Handler:Register", err.Error())
+// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка при создании пользователя")
+// 			b.Instance.Send(msg)
+// 			break
+// 		}
+// 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пользователь успешно зарегистрирован")
+// 		b.Instance.Send(msg)
+// 		break
+// 	case "whoami":
+// 		userReply, err = user_handler.WhoAmI(update.Message.Chat.ID)
+// 		break
+// 	case "all":
+// 		deviceReply, err = device_handler.GetAll()
+// 		if len(deviceReply) == 0 {
+// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Нет добавленного оборудования")
+// 			b.Instance.Send(msg)
+// 		}
+// 		break
+// 	case "check":
+// 		if data == "" {
+// 			data = "14"
+// 		}
+// 		days, err := strconv.Atoi(data)
+// 		if err != nil {
+// 			break
+// 		}
+// 		deviceReply, err = device_handler.Check(days)
+// 		if len(deviceReply) == 0 {
+// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Просроченного оборудования нет!")
+// 			b.Instance.Send(msg)
+// 		}
+// 	case "delete":
+// 		deviceReply, err = device_handler.Delete(data)
+// 		if err == nil {
+// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Успешно удалено следующее оборудование:")
+// 			b.Instance.Send(msg)
+// 		}
+// 		break
+// 	default:
+// 		deviceReply, err = device_handler.GetByField(command, data)
+// 		if len(deviceReply) == 0 {
+// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Не удалось найти оборудование")
+// 			b.Instance.Send(msg)
+// 		}
+// 		break
+// 	}
+// }
 
 func infoMessage() string {
 	commands := fmt.Sprintf("Список доступных команд:\n/all - посмотреть все оборудование\n/create <Данные оборудования> - записать новое оборудование в базу\n/check <Количество дней до срока проверки> - проверка просроченного оборудования\n/<Поле оборудования> <Значение> - выборка оборудования по определенным полям\n")
