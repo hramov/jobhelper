@@ -17,7 +17,10 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.17
-
+        
+    - name: Set up file structure 
+      run: mkdir logs && mkdir uploads
+      
     - name: Login to Docker Hub
       uses: docker/login-action@v1
       with:
@@ -28,13 +31,13 @@ jobs:
       run: CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' ./src/main.go
       
     - name: Create Docker Container
-      run: docker build -t jobhelper .
+      run: docker build -t ${{ secrets.CONTAINER_NAME }} .
       
     - name: Tag the image for pushing
-      run: docker tag jobhelper hramov/jobhelper:latest
+      run: docker tag ${{ secrets.CONTAINER_NAME }} ${{ secrets.DOCKER_HUB_IMAGE }}
       
     - name: Push the image to docker hub
-      run: docker push hramov/jobhelper:latest
+      run: docker push ${{ secrets.DOCKER_HUB_IMAGE }}
     
     - name: Release new version
       uses: appleboy/ssh-action@master
@@ -43,4 +46,8 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.PORT }}
-        script: /opt/jobhelper/build.sh
+        script: |
+                cd /opt/jobhelper
+                docker-compose down
+                docker rmi ${{ secrets.DOCKER_HUB_IMAGE }}
+                docker-compose up -d
