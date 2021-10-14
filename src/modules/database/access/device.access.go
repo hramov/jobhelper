@@ -19,7 +19,7 @@ type DeviceAccess struct {
 func (da *DeviceAccess) FindAll() ([]*device_core.DeviceDto, error) {
 	da.Devices = nil
 	var devices []*device_core.DeviceDto
-	da.DB.Find(&da.Devices)
+	da.DB.Order("id asc").Find(&da.Devices)
 	for i := 0; i < len(da.Devices); i++ {
 		dm := mapper.DeviceMapper{Model: *da.Devices[i]}
 		devices = append(devices, dm.ModelToDto())
@@ -37,7 +37,7 @@ func (da *DeviceAccess) FindByID(id uint) (*device_core.DeviceDto, error) {
 func (da *DeviceAccess) FindByStation(station string) ([]*device_core.DeviceDto, error) {
 	da.Devices = nil
 	var devices []*device_core.DeviceDto
-	da.DB.Find(&da.Devices, "station=?", station)
+	da.DB.Order("id asc").Find(&da.Devices, "station=?", station)
 	for i := 0; i < len(da.Devices); i++ {
 		dm := mapper.DeviceMapper{Model: *da.Devices[i]}
 		devices = append(devices, dm.ModelToDto())
@@ -48,7 +48,7 @@ func (da *DeviceAccess) FindByStation(station string) ([]*device_core.DeviceDto,
 func (da *DeviceAccess) FindByDueDate(days int) ([]*device_core.DeviceDto, error) {
 	da.Devices = []*model.Device{}
 	var devices []*device_core.DeviceDto
-	da.DB.Find(&da.Devices, "next_check < ?", time.Now().AddDate(0, 0, days))
+	da.DB.Order("id asc").Find(&da.Devices, "next_check < ?", time.Now().AddDate(0, 0, days))
 	if len(da.Devices) == 0 {
 		return nil, nil
 	}
@@ -61,7 +61,7 @@ func (da *DeviceAccess) FindByDueDate(days int) ([]*device_core.DeviceDto, error
 
 func (da *DeviceAccess) FindByStringCondition(field, value string) ([]*device_core.DeviceDto, error) {
 	var devices []*device_core.DeviceDto
-	da.DB.Find(&da.Devices, fmt.Sprintf("%s=?", field), value)
+	da.DB.Order("id asc").Find(&da.Devices, fmt.Sprintf("%s=?", field), value)
 	for i := 0; i < len(da.Devices); i++ {
 		dm := mapper.DeviceMapper{Model: *da.Devices[i]}
 		devices = append(devices, dm.ModelToDto())
