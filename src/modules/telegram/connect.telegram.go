@@ -14,6 +14,7 @@ import (
 	"github.com/hramov/jobhelper/src/modules/logger"
 	device_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/device"
 	user_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/user"
+	"github.com/hramov/jobhelper/src/modules/telegram/middleware"
 	"github.com/hramov/jobhelper/src/modules/telegram/worker"
 )
 
@@ -90,6 +91,16 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 		if reflect.TypeOf(update.Message.Text).Kind() == reflect.String && update.Message.Text != "" {
 			if update.Message.IsCommand() {
 				command := update.Message.Command()
+
+				// Check!!! //
+				perm := middleware.AuthMiddleware(users[update.Message.Chat.ID].Role, command)
+				if !perm {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вам запрещен доступ к этой команде!")
+					b.Instance.Send(msg)
+					continue
+				}
+				//*********//
+
 				data := update.Message.CommandArguments()
 
 				var deviceReply []*device_core.DeviceDto

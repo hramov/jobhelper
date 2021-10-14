@@ -43,6 +43,7 @@ func (nw *NotificationWorker) CheckDevices(bot *tgbotapi.BotAPI) {
 		}
 
 		if t.Format("15:04") == "08:00" {
+			logger.Log("Notification Worker", fmt.Sprintf("Device checking. Time: %v", t.Format("15:04")))
 			reply, err := deviceEntity.ShowExpiresDevices(nw.TimePeriod)
 			heads, err := userEntity.ShowWhomToSend()
 			if err != nil {
