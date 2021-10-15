@@ -54,6 +54,7 @@ func (nw *NotificationWorker) CheckDevices(bot *tgbotapi.BotAPI) {
 				if reply == nil {
 					msg := tgbotapi.NewMessage(user.ChatID, fmt.Sprintf("Просроченного оборудования нет"))
 					bot.Send(msg)
+					continue
 				}
 				for _, device := range reply {
 					msg := tgbotapi.NewMessage(user.ChatID, fmt.Sprintf("Внимание!\nТип: %s\nНазвание: %s\nОписание: %s\nНомер: %s\nСтанция: %s\nРасположение:%s\nСтатус: %s\nДата проверки: %v\nДата следующей проверки: %v", device.Type, device.Title, device.Description, device.InvNumber, device.Station, device.Location, device.Status, strings.Split(fmt.Sprintf("%s", device.PrevCheck), " ")[0], strings.Split(fmt.Sprintf("%s", device.NextCheck), " ")[0]))
