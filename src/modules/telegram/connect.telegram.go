@@ -15,7 +15,6 @@ import (
 	device_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/device"
 	user_handler "github.com/hramov/jobhelper/src/modules/telegram/handler/user"
 	"github.com/hramov/jobhelper/src/modules/telegram/middleware"
-	"github.com/hramov/jobhelper/src/modules/telegram/worker"
 )
 
 type TGBot struct {
@@ -46,8 +45,8 @@ func (b *TGBot) Create() *TGBot {
 	b.Update = u
 	b.Clients = make(map[int64]*Client)
 
-	worker := worker.NotificationWorker{TimePeriod: 10}
-	go worker.CheckDevices(b.Instance)
+	// worker := worker.NotificationWorker{TimePeriod: 10}
+	// go worker.CheckDevices(b.Instance)
 
 	return b
 }
