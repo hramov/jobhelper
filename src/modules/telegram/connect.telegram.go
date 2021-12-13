@@ -100,7 +100,6 @@ func (b *TGBot) HandleQuery(updateConfig tgbotapi.UpdateConfig) {
 			}
 		}
 	}
-
 }
 
 func (b *TGBot) errors(message *tgbotapi.Message) {
