@@ -6,6 +6,7 @@ import (
 
 	"github.com/hramov/jobhelper/src/modules/database"
 	"github.com/hramov/jobhelper/src/modules/files"
+	grpc_server "github.com/hramov/jobhelper/src/modules/grpc"
 	"github.com/hramov/jobhelper/src/modules/ioc"
 	"github.com/hramov/jobhelper/src/modules/server"
 	"github.com/hramov/jobhelper/src/modules/telegram"
@@ -26,9 +27,12 @@ func main() {
 
 	bot := telegram.TGBot{Token: os.Getenv("TOKEN"), Admin: "therealhramov"} // Init Telegram Bot instance with token
 	bot.Create()                                                             // Create bot
+	go bot.HandleQuery(bot.Update)                                           // Goroutine that handles telegram bot queries
 
-	go bot.HandleQuery(bot.Update) // Goroutine that handles telegram bot queries
+	grpc := grpc_server.Server{}
+	go grpc.Start()
 
 	app := server.Gin{} // Init server instance
 	app.Start()         // Start server to handle connections
+
 }

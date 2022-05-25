@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+package jobhelper;
+option go_package = "github.com/hramov/jobhelper";
+
+service Jobhelper {
+  rpc GetAll (GetAllRequest) returns (DeviceReply) {}
+}
+
+message GetAllRequest {}
+
+message DeviceReply {
+    required string id = 1;
+	required string type = 2;
+    required string title = 3;
+    required string description = 4;
+    required string invNumber = 5;
+    required string station = 6;
+    required string location = 7;
+    required string status = 8;
+    required string prev_check = 9;
+    required string next_check = 10;
+    required string tag_image_url = 11;
+}
